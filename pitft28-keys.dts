@@ -1,0 +1,70 @@
+/dts-v1/;
+/plugin/;
+/ {
+   compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709", "brcm,bcm2711";
+
+   fragment@0 {
+      target = <&gpio>;
+      __overlay__ {
+         status = "okay";
+         pitft28_pins: pitft28_pins {
+            brcm,pins = <17 18 22 23 27>;
+            brcm,function = <0 1 0 0 0>; // in
+            brcm,pull = <2 0 2 2 2>; // pull-up
+         };
+      };
+      
+      // Gpio pin 18 is backlight, setting it to "output"
+      // Gpio 17,22,23,27 are the four buttons
+      // Pins are different for 2,4" version, see Adafruit schematics.
+   };
+
+   fragment@1 {
+      target-path = "/";
+      __overlay__ {
+         status = "okay";
+         pitft28_keys: pitft28_keys {
+            compatible = "gpio-keys";
+            pinctrl-names = "default";
+            pinctrl-0 = <&pitft28_pins>;
+            autorepeat;
+            btn17: btn17 {
+               label = "Back";
+               linux,code = <14>;
+               gpios = <&gpio 17 1>;
+            };
+            btn22: btn22 {
+               label = "Up";
+               linux,code = <103>;
+               gpios = <&gpio 22 1>;
+            };
+            btn23: btn23 {
+               label = "Down";
+               linux,code = <108>;
+               gpios = <&gpio 23 1>;
+            };
+            btn27: btn27 {
+               label = "Enter";
+               linux,code = <28>;
+               gpios = <&gpio 27 1>;
+            };
+         };
+      };
+   };
+
+   __overrides__ {
+      // parameters
+
+      keycode17 = <&btn17>,"linux,code:0";
+      keycode22 = <&btn22>,"linux,code:0";
+      keycode23 = <&btn23>,"linux,code:0";
+      keycode27 = <&btn27>,"linux,code:0";
+      label17 = <&btn17>,"label";
+      label22 = <&btn22>,"label";
+      label23 = <&btn23>,"label";
+      label27 = <&btn27>,"label";
+
+   };
+
+
+};
