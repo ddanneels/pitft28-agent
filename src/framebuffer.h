@@ -1,12 +1,16 @@
 #ifndef PITFT_AGENT_FRAMEBUFFER_H
 #define PITFT_AGENT_FRAMEBUFFER_H
 
-class Framebuffer {
-public:
-    static int find_framebuffer();
+#include "device.h"
 
-protected:
-    Framebuffer( char* device );
+#include <string>
+
+class Framebuffer : public Device {
+public:
+    static unsigned int getAssociatedMajorNumber() { return 29; }
+    static std::string getDevSearchPath() { return "/dev"; }
+
+    Framebuffer( const std::string &device_path );
     ~Framebuffer();
 };
 

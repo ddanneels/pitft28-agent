@@ -1,31 +1,17 @@
 #include "framebuffer.h"
-#include "dev_node.h"
-
-#include <filesystem>
-#include <iostream>
+#include "device.h"
 
 
-int Framebuffer::find_framebuffer()
-{
-    const std::string DEV_DIR_NAME("/dev");
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <string>
 
-    int counter = 0;
 
-    for ( const std::filesystem::directory_entry entry : std::filesystem::directory_iterator(DEV_DIR_NAME) ) {
-        
-        if ( entry.is_character_file() ) {
-            DeviceNodeNumbers n = DeviceNodeNumbers(entry.path());
-            if ( n.getMajor() == 29 ) {
-                std::cout << entry.path() << std::endl;
-                counter++;
-            }
-        }
-    }
-
-    return counter;
-}
-
-Framebuffer::Framebuffer( char* device )
+Framebuffer::Framebuffer( const std::string &device_path )
+: Device( device_path )
 {
     //noop
 }
