@@ -10,8 +10,6 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 
-// to prevent linker error, we need to list here all needed templates
-template class DeviceScanner<Framebuffer>;
 
 
 template <class T>
@@ -28,7 +26,8 @@ std::list<T> DeviceScanner<T>::findDevices(const std::string &dev_path, unsigned
                 std::string device_path = std::string(dev_path).append("/").append(dir_entry->d_name);
                 if ( (stat( device_path.c_str(), &file_stat )) == 0 ) {
                     if ( major( file_stat.st_rdev ) == major ) {
-                        std::cout << device_path << std::endl;
+                        //std::cout << device_path << std::endl;
+                        list.push_back( T(device_path) );
                     }
                 }
             }

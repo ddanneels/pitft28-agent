@@ -37,7 +37,11 @@ An experiment with Adafruit PiTFT 2,8" capacitive screen
     1)  ### Check
         After rebooting your board, you can use `evtest` command to check that a new input device is available and that functions are correctly mapped.
 
+1.  ## Permissions
 
+    From the command line, run the `groups` command to ensure that you are member of both `video` and `input` groups. If not, run the following command : ````bash
+    sudo usermod <your-username> -a -G video,input
+    ````
 
 
 [1]: https://github.com/adafruit/Raspberry-Pi-Installer-Scripts/blob/master/adafruit-pitft.sh

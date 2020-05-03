@@ -1,18 +1,44 @@
-#ifndef PITFT_AGENT_FRAMEBUFFER_H
-#define PITFT_AGENT_FRAMEBUFFER_H
+#ifndef SRC_FRAMEBUFFER_H
+#define SRC_FRAMEBUFFER_H
 
-#include "device.h"
+#include <uchar.h>
 
-#include <string>
+#include "lvgl/lvgl.h"
 
-class Framebuffer : public Device {
-public:
-    static unsigned int getAssociatedMajorNumber() { return 29; }
-    static std::string getDevSearchPath() { return "/dev"; }
-
-    Framebuffer( const std::string &device_path );
-    ~Framebuffer();
+struct framebuffer {
+  char16_t*    mem;
+  unsigned int memsize;
+  unsigned int line_length;
+  int          fd;
+  unsigned int xres, yres;
 };
+typedef struct framebuffer framebuffer_t;
+
+extern framebuffer_t* fb;
+
+/*
+struct rgba {
+  unsigned int r, g, b, a;
+};
+typedef struct rgba rgba_t;
+*/
+
+char* find_framebuffer_device();
+
+int open_framebuffer( char* device_path );
+
+void close_framebuffer( );
 
 
-#endif // PITFT_AGENT_FRAMEBUFFER_H
+
+char16_t rgb( unsigned char r, unsigned char v, unsigned char b );
+
+
+void SetPixel( unsigned int x, unsigned int y, char16_t color );
+
+void Fill( unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, char16_t color );
+
+void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t * area, lv_color_t * color_p);
+
+
+#endif // SRC_FRAMEBUFFER_H

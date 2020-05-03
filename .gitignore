@@ -1,8 +1,13 @@
 # No binaries
 /bin
 libevdev
-libevdev-events.c
 pitft28-agent
+pitft_agent
+tslib-test
+
+# Test
+tslib-test.c
+libevdev-events.c
 
 # Prerequisites
 *.d
