@@ -4,7 +4,6 @@ AC_PROG_CC_C99
 
 CFLAGS+=" -std=c11 -O2 -Wall -Wno-error"
 
-# AC_SUBST([AM_CXXFLAGS],["-std=c++17 -g -O2 -Wno-unused-function -Wno-cpp -Wall -Wno-error"])
 PKG_CHECK_MODULES([LIBEVDEV], [libevdev >= 1.6.0],,
   AC_MSG_ERROR([libevdev 1.6.0 or newer not found.])
 )
@@ -19,6 +18,10 @@ PKG_CHECK_MODULES([LIBEVDEV], [libevdev >= 1.6.0],,
 
 AC_CHECK_LIB([wiringPi], [wiringPiSetup],,
   AC_MSG_ERROR([wiringPi not found.])
+)
+
+AC_CHECK_LIB([sensors], [sensors_get_value],,
+  AC_MSG_ERROR([libsensors not found.])
 )
 
 # Checks for header files.

@@ -7,6 +7,6 @@ char *find_touchscreen_device();
 
 int touchscreen_listener( void* device_path );
 
-bool my_touchpad_read(lv_indev_drv_t * indev, lv_indev_data_t * data);
+bool read_touchscreen(lv_indev_drv_t * indev, lv_indev_data_t * data);
 
 #endif // SRC_TOUCHSCREEN_H

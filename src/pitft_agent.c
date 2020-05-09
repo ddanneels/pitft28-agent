@@ -15,13 +15,7 @@
 #include "touchscreen.h"
 #include "framebuffer.h"
 #include "pitft_agent.h"
-
-/*
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-FT_Library  library;
-*/
+#include "interface.h"
 
 
 static lv_disp_buf_t disp_buf;
@@ -40,40 +34,29 @@ void sigterm_handler(int signal)
 int tick_thread (void *args)
 {
       while(!g_exit_requested) {
-        usleep(3*1000);
-        lv_tick_inc(3);
+        usleep(5*1000);
+        lv_tick_inc(5);
     }
 }
-
-
-void btn_event_cb(lv_obj_t * btn, lv_event_t event)
-{
-    if(event == LV_EVENT_CLICKED) {
-        printf("Clicked\n");
-        g_exit_requested = true;
-    }
-}
-
-
 
 int main(int argc, char* argv[]) {
 
   char*                touchscreen_path;
   char*                framebuffer_path;
+  lv_disp_drv_t        disp_drv;
+  lv_indev_drv_t       touchscreen_drv;
 
-thrd_t thr_touchscreen;
-thrd_t thr_tick;
+  // Several threads
+  thrd_t thr_touchscreen;
+  thrd_t thr_tick;
 
-// struct framebuffer*  fb;
-/*  FT_Error             e;
-  FT_Face              face;
-  FT_UInt              glyph_index;
-char32_t ch[1];
-mbstate_t ps;*/
+  // LittlevGL initialization
+  lv_init();
+  lv_disp_drv_init(&disp_drv);
+  lv_indev_drv_init(&touchscreen_drv);
 
-lv_init();
-
-
+  // Probing devices
+  // Input devices may change depending on hardware connected at boot
   if (( touchscreen_path = find_touchscreen_device() ) == NULL ) {
     fprintf(stderr, "No touchscreen device found\n");
   };
@@ -92,46 +75,6 @@ lv_init();
     return 1;
   }
 
-  // allright so far
-
-/*
-e = FT_Init_FreeType( &library );
-if ( e ) {
-  fprintf(stderr, "Unable to initialize Freetype library : %d\n", e);
-}
-
-e = FT_New_Face( library,
-                     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                     0,
-                     &face );
-if ( e ) {
-  fprintf(stderr, "Unable to load font : %d\n", e);
-}
-
-e = FT_Set_Char_Size(
-          face,
-          0,
-          24*64,
-          72,
-          72 ); 
-if ( e ) {
-  fprintf(stderr, "Unable to set char size : %d\n", e);
-}
-
-mbsinit( &ps );
-mbrtoc32( ch, "Aqc-%", 1, &ps );
-printf("Printing code %d\n", ch[0]);
-glyph_index = FT_Get_Char_Index( face, ch[0] );
-e = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
-if ( e ) {
-  fprintf(stderr, "Unable to load glyph : %d\n", e);
-}
-e = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
-
-*/
-
-
-
   // Listen for Ctrl-C
   signal(SIGINT, sigterm_handler );
 
@@ -141,65 +84,34 @@ e = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
 
   Fill( 0, 0, fb->xres-1, fb->yres-1, rgb(0, 0, 0xc0));
 
+  // Continue with LittlevGL configuration,
+  // for display and touch input
+  buf = malloc( fb->xres * fb->yres * sizeof(lv_color_t));
+  lv_disp_buf_init(&disp_buf, buf, NULL, fb->xres * fb->yres); 
 
-printf("sizeof lv_color_t : %d\n", sizeof(lv_color_t));
+  disp_drv.hor_res  = fb->xres;
+  disp_drv.ver_res  = fb->yres;
+  disp_drv.flush_cb = my_disp_flush;
+  disp_drv.buffer   = &disp_buf;
+  lv_disp_drv_register(&disp_drv);    
 
-buf = malloc( fb->xres * fb->yres * sizeof(lv_color_t));
-lv_disp_buf_init(&disp_buf, buf, NULL, fb->xres * fb->yres); 
+  touchscreen_drv.type    = LV_INDEV_TYPE_POINTER;
+  touchscreen_drv.read_cb = read_touchscreen;
+  lv_indev_drv_register(&touchscreen_drv);
 
-lv_disp_drv_t disp_drv;               /*Descriptor of a display driver*/
-lv_disp_drv_init(&disp_drv);          /*Basic initialization*/
-disp_drv.flush_cb = my_disp_flush;    /*Set your driver function*/
-disp_drv.buffer = &disp_buf;          /*Assign the buffer to the display*/
-    /*Set the resolution of the display*/
-    disp_drv.hor_res = 320;
-    disp_drv.ver_res = 240;
+  setup_interface();
 
-lv_disp_drv_register(&disp_drv);    
+  // Launch auxiliary threads 
+  thrd_create( &thr_touchscreen, touchscreen_listener, (void*) touchscreen_path );
+  thrd_create( &thr_tick, tick_thread, NULL);
 
-lv_indev_drv_t indev_drv;                  /*Descriptor of a input device driver*/
-lv_indev_drv_init(&indev_drv);             /*Basic initialization*/
-indev_drv.type = LV_INDEV_TYPE_POINTER;    /*Touch pad is a pointer-like device*/
-indev_drv.read_cb = my_touchpad_read;      /*Set your driver function*/
-lv_indev_drv_register(&indev_drv);         /*Finally register the driver*/
+  main_loop();
 
+  // Wait for threads termination
+  thrd_join( thr_touchscreen, NULL );
+  thrd_join( thr_tick, NULL);
 
-
-/*
-printf(" Glyph: %dx%d\n", face->glyph->bitmap.width, face->glyph->bitmap.rows );
-
-  for ( unsigned int x = 0 ; x < face->glyph->bitmap.width ; x++ ) {
-    for ( unsigned int y = 0 ; y < face->glyph->bitmap.rows ; y++ ) {
-      unsigned char c = face->glyph->bitmap.buffer[ y*face->glyph->bitmap.width + x ];
-
-      SetPixel( fb, 100 + x, 100 + y, rgb( c, c, c));
-    }
-  }
-*/
-
-
-lv_obj_t * btn = lv_btn_create(lv_scr_act(), NULL);     /*Add a button the current screen*/
-lv_obj_set_pos(btn, 10, 10);                            /*Set its position*/
-lv_obj_set_size(btn, 100, 50);                          /*Set its size*/
-lv_obj_set_event_cb(btn, btn_event_cb);                 /*Assign a callback to the button*/
-
-lv_obj_t * label = lv_label_create(btn, NULL);          /*Add a label to the button*/
-lv_label_set_text(label, "Button");                     /*Set the labels text*/
-
-
-
-
-thrd_create( &thr_touchscreen, touchscreen_listener, (void*) touchscreen_path );
-thrd_create( &thr_tick, tick_thread, NULL);
-
-      while ( ! g_exit_requested ) {
-        usleep(3000);
-        lv_task_handler();
-      };
-
-thrd_join( thr_touchscreen, NULL );
-thrd_join( thr_tick, NULL);
-
+  // Clean-up
   Fill( 0, 0, fb->xres-1, fb->yres-1, rgb(0, 0, 0));
 
   printf("Thank you. Bye.\n");

@@ -10,6 +10,9 @@
 /* Define to 1 if you have the `ioctl' function. */
 #define HAVE_IOCTL 1
 
+/* Define to 1 if you have the `sensors' library (-lsensors). */
+#define HAVE_LIBSENSORS 1
+
 /* Define to 1 if you have the `wiringPi' library (-lwiringPi). */
 #define HAVE_LIBWIRINGPI 1
 

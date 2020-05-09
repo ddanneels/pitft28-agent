@@ -114,13 +114,13 @@ int open_framebuffer( char* device_path ) {
         fprintf(stderr, "Failed to ioctl device (%s)\n", strerror(errno));
     } else {
 
-printf("  smem_len: %d\n", fix_screeninfo.smem_len);
-printf("  smem_start: %p\n", (void*) fix_screeninfo.smem_start);
-printf("  line_length: %d\n", fix_screeninfo.line_length);
-printf("  mmio_start: %p\n", (void*) fix_screeninfo.mmio_start);
-printf("  mmio_len: %d\n", fix_screeninfo.mmio_len);
-printf("  size: %d x %d mm\n", var_screeninfo.width, var_screeninfo.height );
-printf("  resolution: %dx%d %d bpp\n", var_screeninfo.xres, var_screeninfo.yres, var_screeninfo.bits_per_pixel);
+      printf("  smem_len: %d\n", fix_screeninfo.smem_len);
+      printf("  smem_start: %p\n", (void*) fix_screeninfo.smem_start);
+      printf("  line_length: %d\n", fix_screeninfo.line_length);
+      printf("  mmio_start: %p\n", (void*) fix_screeninfo.mmio_start);
+      printf("  mmio_len: %d\n", fix_screeninfo.mmio_len);
+      printf("  size: %d x %d mm\n", var_screeninfo.width, var_screeninfo.height );
+      printf("  resolution: %dx%d %d bpp\n", var_screeninfo.xres, var_screeninfo.yres, var_screeninfo.bits_per_pixel);
 
       fb->memsize = var_screeninfo.xres * var_screeninfo.yres * var_screeninfo.bits_per_pixel / 8;
       fb->line_length = fix_screeninfo.line_length;
@@ -131,8 +131,8 @@ printf("  resolution: %dx%d %d bpp\n", var_screeninfo.xres, var_screeninfo.yres,
       if ( fb->mem == (char16_t*) -1 ) {
         fprintf(stderr, "Failed to map framebuffer (%s)\n", strerror(errno));
       } else {
-printf("  mmap: %p\n", fb->mem);
-printf("  memsize: %d\n", fb->memsize);
+        printf("  mmap: %p\n", fb->mem);
+        printf("  memsize: %d\n", fb->memsize);
         if ( wiringPiSetup() != 0 ) {
           fprintf(stderr, "Failed to map framebuffer (%s)\n", strerror(errno));
         } else {
@@ -157,45 +157,12 @@ char16_t rgb( unsigned char r, unsigned char g, unsigned char b ) {
                     | ( ( b & 0xF8 ) >> 3 ) ); 
 }
 
-/*
-char16_t rgb( rgba_t c ) {
-  return rgb( c.r, c.g, c.b );
-}
-
-rgba_t rgba( char16_t c ) {
-  rgba_t t;
-
-  t.r = ( c & 0xF800 ) >> 8;
-  t.g = ( c & 0x07E0 ) >> 3;
-  t.b = ( c & 0x001F ) << 3;
-  t.a = 0;
-
-  return t;
-}
-*/
-
 void SetPixel( unsigned int x, unsigned int y, char16_t color ) {
   int addr = ( y * fb->xres ) + x;
   assert( addr < ( fb->xres * fb->yres ));
 
   fb->mem[addr] = color;
 }
-
-/*
-void SetPixel( , int x, int y, rgba_t color ) {
-  int addr = ( y * fb->xres ) + x;
-  assert( addr < ( fb->xres * fb->yres ));
-
-  rgba_t c = rgba( fb->mem[addr] );
-
-  c.r = ( c.r * ( 255 - color.a) + color.r * color.a ) / 2;
-  c.g = ( c.g * ( 255 - color.a) + color.g * color.a ) / 2;
-  c.b = ( c.b * ( 255 - color.a) + color.b * color.a ) / 2;
-  
-  fb->mem[addr] = rgb( c );
-
-}
-*/
 
 void Fill( unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, char16_t color ) {
   for ( int y = y1 ; y <= y2 ; y++) {
