@@ -8,6 +8,8 @@ pitft_agent_SOURCES=                                    \
   src/framebuffer.c                                     \
   src/interface.h                                       \
   src/interface.c                                       \
+  src/bluetooth.h                                       \
+  src/bluetooth.c                                       \
                                                         \
   src/lvgl/src/lv_conf_checker.h                        \
   src/lvgl/src/lv_core/lv_debug.c                       \
@@ -185,7 +187,7 @@ pitft_agent_SOURCES=                                    \
   src/lvgl/src/lv_version.h
 
 
-pitft_agent_CFLAGS = $(LIBEVDEV_CFLAGS) $(SENSORS_CFLAGS)
+pitft_agent_CFLAGS = $(LIBEVDEV_CFLAGS) $(BLUEZ_CFLAGS) $(SENSORS_CFLAGS)
 # $(FREETYPE2_CFLAGS)
-pitft_agent_LDADD = $(LIBEVDEV_LIBS) $(SENSORS_LIBS) -lpthread
+pitft_agent_LDADD = $(LIBEVDEV_LIBS) $(BLUEZ_LIBS) $(SENSORS_LIBS) -lpthread
 # $(FREETYPE2_LIBS)

@@ -8,6 +8,10 @@ PKG_CHECK_MODULES([LIBEVDEV], [libevdev >= 1.6.0],,
   AC_MSG_ERROR([libevdev 1.6.0 or newer not found.])
 )
 
+PKG_CHECK_MODULES([BLUEZ], [bluez >= 4.0.0],,
+  AC_MSG_ERROR([BlueZ 4.0.0 or newer not found.])
+)
+
 # PKG_CHECK_MODULES([FREETYPE2], [freetype2],,
 #   AC_MSG_ERROR([FreeType 2 not found.])
 # )

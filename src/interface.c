@@ -7,6 +7,7 @@
 #include "lvgl/lvgl.h"
 
 #include "pitft_agent.h"
+#include "bluetooth.h"
 
 
 static const char * pincode_kb_map[] = {
@@ -18,15 +19,44 @@ lv_obj_t *main_screen;
 lv_obj_t *pincode_label;
 lv_obj_t *pincode_ta;
 lv_obj_t *pincode_kb;
+lv_obj_t *exit_btn;
+lv_obj_t *exit_btn_label;
+lv_obj_t *scan_bluetooth_btn;
+lv_obj_t *scan_bluetooth_btn_label;
 
-void btn_event_cb(lv_obj_t * btn, lv_event_t event)
+lv_task_t *scan_bluetooth_task;
+
+bool waiting_scan_bluetooth = false;
+
+void exit_btn_event_cb(lv_obj_t *btn, lv_event_t event)
 {
-  if(event == LV_EVENT_CLICKED) {
+  if(event == LV_EVENT_CLICKED ) {
     g_exit_requested = true;
   }
 }
 
-void pincode_event_cb( lv_obj_t *kb, lv_event_t event) 
+void check_finished_bluetooth_scan(lv_task_t *task)
+{
+  if ( is_bluetooth_scan_finished() ) {
+    printf("Scan finished\n");
+    lv_task_del(scan_bluetooth_task);
+  } else {
+    printf(".\n");
+  }
+}
+
+void scan_bluetooth_btn_event_cb(lv_obj_t *btn, lv_event_t event)
+{
+  if(event == LV_EVENT_CLICKED ) {
+    launch_scan_bluetooth();
+    scan_bluetooth_task = lv_task_create(check_finished_bluetooth_scan, 500, LV_TASK_PRIO_MID, NULL);
+  }
+}
+
+
+
+
+void pincode_event_cb(lv_obj_t *kb, lv_event_t event) 
 {
   static int tries = 3;
 
@@ -89,13 +119,21 @@ void setup_interface()
   lv_obj_set_event_cb( pincode_kb, pincode_event_cb);
 
   main_screen = lv_obj_create(NULL, NULL);
-  lv_obj_t * btn = lv_btn_create(main_screen, NULL);
-  lv_obj_set_pos(btn, 10, 10);
-  lv_obj_set_size(btn, 100, 50);
-  lv_obj_set_event_cb(btn, btn_event_cb);
+  exit_btn = lv_btn_create(main_screen, NULL);
+  lv_obj_set_pos(exit_btn, 10, 10);
+  lv_obj_set_size(exit_btn, 100, 50);
+  lv_obj_set_event_cb(exit_btn, exit_btn_event_cb);
 
-  lv_obj_t * label = lv_label_create(btn, NULL);
-  lv_label_set_text(label, "Exit");
+  lv_obj_t * exit_btn_label = lv_label_create(exit_btn, NULL);
+  lv_label_set_text(exit_btn_label, "Exit");
+
+  scan_bluetooth_btn = lv_btn_create(main_screen, NULL);
+  lv_obj_set_pos(scan_bluetooth_btn, 10, 70);
+  lv_obj_set_size(scan_bluetooth_btn, 100, 50);
+  lv_obj_set_event_cb(scan_bluetooth_btn, scan_bluetooth_btn_event_cb);
+
+  lv_obj_t * scan_bluetooth_btn_label = lv_label_create(scan_bluetooth_btn, NULL);
+  lv_label_set_text(scan_bluetooth_btn_label, "Scan");
 
 }
 
@@ -103,7 +141,7 @@ void setup_interface()
 void main_loop() {
   while ( ! g_exit_requested ) {
     usleep(5000);
-    if ( lv_disp_get_inactive_time( NULL ) > 5000 ) {
+    if ( lv_disp_get_inactive_time( NULL ) > 20000 ) {
       // Lock screen
       lv_ta_set_text(pincode_ta,"");
       lv_scr_load(lock_screen);
