@@ -1,13 +1,6 @@
 # No binaries
 /bin
-libevdev
-pitft28-agent
 pitft_agent
-tslib-test
-
-# Test
-tslib-test.c
-libevdev-events.c
 
 # Prerequisites
 *.d
@@ -78,8 +71,8 @@ Makefile.in
 /py-compile
 /test-driver
 /ylwrap
-.deps/
-.dirstamp
+**/.deps/
+**/.dirstamp
 
 # http://www.gnu.org/software/autoconf
 
@@ -88,7 +81,8 @@ autom4te.cache
 /autoscan-*.log
 /aclocal.m4
 /compile
-/config.guess
+/config.guesspp
+/config.h
 /config.h.in
 /config.log
 /config.status
