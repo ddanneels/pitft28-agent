@@ -2,7 +2,7 @@ AC_INIT([pitft_agent], [0.1])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 AC_PROG_CC_C99
 
-CFLAGS+=" -std=c11 -O2 -Wall -Wno-error"
+CFLAGS+=" -g -std=c11 -Wall -Wno-error"
 
 PKG_CHECK_MODULES([LIBEVDEV], [libevdev >= 1.6.0],,
   AC_MSG_ERROR([libevdev 1.6.0 or newer not found.])

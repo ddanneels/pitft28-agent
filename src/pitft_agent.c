@@ -33,10 +33,11 @@ void sigterm_handler(int signal)
 
 int tick_thread (void *args)
 {
-      while(!g_exit_requested) {
-        usleep(5*1000);
-        lv_tick_inc(5);
-    }
+  while(!g_exit_requested) {
+    usleep(5*1000);
+    lv_tick_inc(5);
+  }
+  return 0;
 }
 
 int main(int argc, char* argv[]) {

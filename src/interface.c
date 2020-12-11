@@ -10,15 +10,16 @@
 #include "bluetooth.h"
 
 
-static const char * pincode_kb_map[] = {
-                     "1", "2", "3", "4", "5", LV_SYMBOL_BACKSPACE, "\n",
-                     "6", "7", "8", "9", "0", LV_SYMBOL_OK, ""};
+static const char * pincode_btnm_map[] = {
+                     "1", "2", "3", "4", "5", "\n",
+                     "6", "7", "8", "9", "0", "\n",
+                     LV_SYMBOL_BACKSPACE, LV_SYMBOL_OK, ""};
 
 lv_obj_t *lock_screen;
 lv_obj_t *main_screen;
 lv_obj_t *pincode_label;
 lv_obj_t *pincode_ta;
-lv_obj_t *pincode_kb;
+lv_obj_t *pincode_btnm;
 lv_obj_t *exit_btn;
 lv_obj_t *exit_btn_label;
 lv_obj_t *scan_bluetooth_btn;
@@ -56,35 +57,48 @@ void scan_bluetooth_btn_event_cb(lv_obj_t *btn, lv_event_t event)
 
 
 
-void pincode_event_cb(lv_obj_t *kb, lv_event_t event) 
+void pincode_event_cb(lv_obj_t *btnm, lv_event_t event) 
 {
   static int tries = 3;
+  const char * txt;
 
-  lv_kb_def_event_cb(kb, event);
-
-  if (event == LV_EVENT_APPLY) {
-    printf(lv_ta_get_text(pincode_ta));
-    printf("\n");
-    if ( strncmp( lv_ta_get_text(pincode_ta), "1397", 10) == 0 ) {
-      lv_label_set_text( pincode_label, "Welcome home !");
-      lv_scr_load(main_screen);
+  if (event == LV_EVENT_VALUE_CHANGED ) {
+    printf("something is happening...\n");
+    txt = lv_btnmatrix_get_active_btn_text(btnm);
+    if (txt == NULL) {
+      printf("ERROR. Nothing was pressed ?!\n");
     } else {
-      char n_left[] = "x tries left";
-      switch ( --tries ) {
-      case 0:
-        lv_label_set_text( pincode_label, "Failed");
-        g_exit_requested = true;
-        break;
-      case 1:
-        lv_label_set_text( pincode_label, "This is your last try");
-        break;
-      default:        
-        n_left[0] = '0' + tries;
-        lv_label_set_text( pincode_label, n_left);
-        break;
+      printf("%s was pressed\n", txt);
+
+      if (strcmp(txt, LV_SYMBOL_OK) == 0) {
+        printf(lv_textarea_get_text(pincode_ta));
+        printf("\n");
+        if ( strcmp( lv_textarea_get_text(pincode_ta), "1397") == 0 ) {
+          lv_label_set_text( pincode_label, "Welcome home !");
+          lv_scr_load(main_screen);
+        } else {
+          char n_left[] = "x tries left";
+          switch ( --tries ) {
+          case 0:
+            lv_label_set_text( pincode_label, "Failed");
+            g_exit_requested = true;
+            break;
+          case 1:
+            lv_label_set_text( pincode_label, "This is your last try");
+            break;
+          default:        
+            n_left[0] = '0' + tries;
+            lv_label_set_text( pincode_label, n_left);
+            break;
+          }
+        }
+        lv_textarea_set_text(pincode_ta,"");
+      } else if (strcmp(txt, LV_SYMBOL_BACKSPACE) == 0) {
+        lv_textarea_del_char(pincode_ta);
+      } else {
+        lv_textarea_add_text(pincode_ta, txt);
       }
     }
-    lv_ta_set_text(pincode_ta,"");
   }
 }
 
@@ -99,24 +113,24 @@ void setup_interface()
   lv_obj_set_width(pincode_label, LV_HOR_RES);
   lv_obj_align(pincode_label, NULL, LV_ALIGN_IN_TOP_MID, 0, 10);
 
-  pincode_ta = lv_ta_create(lock_screen, NULL);
-  lv_ta_set_one_line(pincode_ta, true);
-  lv_ta_set_pwd_mode(pincode_ta, true);
-  lv_ta_set_text_align(pincode_ta, LV_LABEL_ALIGN_CENTER);
-  lv_ta_set_accepted_chars(pincode_ta, "0123456789");
-  lv_ta_set_max_length(pincode_ta, 6);
+  pincode_ta = lv_textarea_create(lock_screen, NULL);
+  lv_textarea_set_one_line(pincode_ta, true);
+  lv_textarea_set_pwd_mode(pincode_ta, true);
+  lv_textarea_set_text_align(pincode_ta, LV_LABEL_ALIGN_CENTER);
+  lv_textarea_set_accepted_chars(pincode_ta, "0123456789");
+  lv_textarea_set_max_length(pincode_ta, 6);
   lv_obj_set_width(pincode_ta, LV_HOR_RES * 0.5);
-  lv_ta_set_text(pincode_ta, "");
-  lv_ta_set_text_sel(pincode_ta, false);
+  lv_textarea_set_text(pincode_ta, "");
+  lv_textarea_set_text_sel(pincode_ta, false);
   lv_obj_align(pincode_ta, pincode_label, LV_ALIGN_CENTER | LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 
-  pincode_kb = lv_kb_create(lock_screen, NULL);
-  lv_kb_set_map(pincode_kb, pincode_kb_map );
-  lv_kb_set_ta(pincode_kb, pincode_ta);
-  lv_obj_set_height(pincode_kb, LV_VER_RES * 0.5 );
-  lv_obj_set_width(pincode_kb, LV_HOR_RES - 20 );
-  lv_obj_align(pincode_kb, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
-  lv_obj_set_event_cb( pincode_kb, pincode_event_cb);
+  pincode_btnm = lv_btnmatrix_create(lock_screen, NULL);
+  lv_btnmatrix_set_map(pincode_btnm, pincode_btnm_map );
+  lv_btnmatrix_set_btn_width(pincode_btnm, 11, 2);  
+  lv_obj_set_height(pincode_btnm, LV_VER_RES * 0.6 );
+  lv_obj_set_width(pincode_btnm, LV_HOR_RES - 20 );
+  lv_obj_align(pincode_btnm, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
+  lv_obj_set_event_cb( pincode_btnm, pincode_event_cb);
 
   main_screen = lv_obj_create(NULL, NULL);
   exit_btn = lv_btn_create(main_screen, NULL);
@@ -143,7 +157,7 @@ void main_loop() {
     usleep(5000);
     if ( lv_disp_get_inactive_time( NULL ) > 20000 ) {
       // Lock screen
-      lv_ta_set_text(pincode_ta,"");
+      lv_textarea_set_text(pincode_ta,"");
       lv_scr_load(lock_screen);
     }
     lv_task_handler();

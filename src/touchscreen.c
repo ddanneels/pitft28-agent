@@ -172,6 +172,7 @@ int touchscreen_listener( void* device_path ) {
               if ( pressed ) {
                 touchscreen_x = x;
                 touchscreen_y = y;
+                printf("%dx%d\n", touchscreen_x, touchscreen_y);
               }
               touchscreen_pressed = pressed;
               mtx_unlock(touchscreen_mutex);
