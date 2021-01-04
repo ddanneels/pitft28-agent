@@ -8,7 +8,7 @@
 
 #include "pitft_agent.h"
 #include "bluetooth.h"
-
+#include "weak_password.h"
 
 static const char * pincode_btnm_map[] = {
                      "1", "2", "3", "4", "5", "\n",
@@ -71,9 +71,8 @@ void pincode_event_cb(lv_obj_t *btnm, lv_event_t event)
       printf("%s was pressed\n", txt);
 
       if (strcmp(txt, LV_SYMBOL_OK) == 0) {
-        printf(lv_textarea_get_text(pincode_ta));
-        printf("\n");
-        if ( strcmp( lv_textarea_get_text(pincode_ta), "1397") == 0 ) {
+        printf("%s\n", lv_textarea_get_text(pincode_ta));
+        if ( strcmp( lv_textarea_get_text(pincode_ta), WEAK_PASSWORD) == 0 ) {
           lv_label_set_text( pincode_label, "Welcome home !");
           lv_scr_load(main_screen);
         } else {

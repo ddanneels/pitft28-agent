@@ -1,3 +1,6 @@
 [submodule "src/lvgl"]
 	path = src/lvgl
-	url = https://github.com/lvgl/lvgl/tree/release/v7
+	url = https://github.com/lvgl/lvgl
+[submodule "src/lv_drivers"]
+	path = src/lv_drivers
+	url = https://github.com/lvgl/lv_drivers

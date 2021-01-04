@@ -1,3 +1,14 @@
+
+// pitft28-agent, (GPLv3 License) copyright (C) 2021  Damien DANNEELS
+//
+// Credits :
+// LVGL library and drivers (MIT License) : LVGL LLC, https://lvgl.io
+// PiTFT : Adafruit Industries, LLC, https://adafruit.com
+// Raspberry Pi : Raspberry Pi Foundation, https://www.raspberrypi.org/
+//
+
+
+
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -12,14 +23,11 @@
 
 #include "lvgl/lvgl.h"
 
-#include "touchscreen.h"
-#include "framebuffer.h"
+#include "lv_drivers/display/monitor.h"
+#include "lv_drivers/indev/mouse.h"
+
 #include "pitft_agent.h"
 #include "interface.h"
-
-
-static lv_disp_buf_t disp_buf;
-static lv_color_t *buf = NULL;
 
 
 bool g_exit_requested = false;
@@ -33,6 +41,8 @@ void sigterm_handler(int signal)
 
 int tick_thread (void *args)
 {
+  (void)args;
+
   while(!g_exit_requested) {
     usleep(5*1000);
     lv_tick_inc(5);
@@ -42,89 +52,61 @@ int tick_thread (void *args)
 
 int main(int argc, char* argv[]) {
 
-  char*                touchscreen_path;
-  char*                framebuffer_path;
-  lv_disp_drv_t        disp_drv;
-  lv_indev_drv_t       touchscreen_drv;
 
   // Several threads
-  thrd_t thr_touchscreen;
   thrd_t thr_tick;
 
   // LittlevGL initialization
   lv_init();
-  lv_disp_drv_init(&disp_drv);
-  lv_indev_drv_init(&touchscreen_drv);
+  /* Use the 'monitor' driver which creates window on PC's monitor to simulate a display*/
+  monitor_init();
 
-  // Probing devices
-  // Input devices may change depending on hardware connected at boot
-  if (( touchscreen_path = find_touchscreen_device() ) == NULL ) {
-    fprintf(stderr, "No touchscreen device found\n");
-  };
+  /*Create a display buffer*/
+  lv_disp_drv_t        disp_drv;
+  static lv_disp_buf_t disp_buf1;
+  static lv_color_t buf1_1[LV_HOR_RES_MAX * 120];
+  lv_disp_buf_init(&disp_buf1, buf1_1, NULL, LV_HOR_RES_MAX * 120);
 
-  if (( framebuffer_path = find_framebuffer_device() ) == NULL ) {
-    fprintf(stderr, "No framebuffer device found\n");
-  };
+  /*Create a display*/
+  lv_disp_drv_init(&disp_drv); /*Basic initialization*/
+  disp_drv.buffer = &disp_buf1;
+  disp_drv.flush_cb = monitor_flush;
+  lv_disp_drv_register(&disp_drv);
 
-  if ( touchscreen_path == NULL || framebuffer_path == NULL ) {
-    if (touchscreen_path != NULL ) 
-      free(touchscreen_path);
+  /* Add the mouse as input device
+   * Use the 'mouse' driver which reads the PC's mouse*/
+  mouse_init();
+  lv_indev_drv_t indev_drv;
+  lv_indev_drv_init(&indev_drv); /*Basic initialization*/
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
 
-    if (framebuffer_path != NULL ) 
-      free(framebuffer_path);
+  /*This function will be called periodically (by the library) to get the mouse position and state*/
+  indev_drv.read_cb = mouse_read;
+  lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv);
 
-    return 1;
-  }
+  /*Set a cursor for the mouse*/
+  LV_IMG_DECLARE(mouse_cursor_icon); /*Declare the image file.*/
+  lv_obj_t * cursor_obj = lv_img_create(lv_scr_act(), NULL); /*Create an image object for the cursor */
+  lv_img_set_src(cursor_obj, &mouse_cursor_icon);           /*Set the image source*/
+  lv_indev_set_cursor(mouse_indev, cursor_obj);             /*Connect the image  object to the driver*/
 
   // Listen for Ctrl-C
   signal(SIGINT, sigterm_handler );
 
-  if ( open_framebuffer( framebuffer_path ) != 0 ) {
-    return 1;
-  };
-
-  Fill( 0, 0, fb->xres-1, fb->yres-1, rgb(0, 0, 0xc0));
-
-  // Continue with LittlevGL configuration,
-  // for display and touch input
-  buf = malloc( fb->xres * fb->yres * sizeof(lv_color_t));
-  lv_disp_buf_init(&disp_buf, buf, NULL, fb->xres * fb->yres); 
-
-  disp_drv.hor_res  = fb->xres;
-  disp_drv.ver_res  = fb->yres;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.buffer   = &disp_buf;
-  lv_disp_drv_register(&disp_drv);    
-
-  touchscreen_drv.type    = LV_INDEV_TYPE_POINTER;
-  touchscreen_drv.read_cb = read_touchscreen;
-  lv_indev_drv_register(&touchscreen_drv);
-
   setup_interface();
 
   // Launch auxiliary threads 
-  thrd_create( &thr_touchscreen, touchscreen_listener, (void*) touchscreen_path );
+  //thrd_create( &thr_touchscreen, touchscreen_listener, (void*) touchscreen_path );
   thrd_create( &thr_tick, tick_thread, NULL);
 
   main_loop();
 
   // Wait for threads termination
-  thrd_join( thr_touchscreen, NULL );
+  //thrd_join( thr_touchscreen, NULL );
   thrd_join( thr_tick, NULL);
-
-  // Clean-up
-  Fill( 0, 0, fb->xres-1, fb->yres-1, rgb(0, 0, 0));
 
   printf("Thank you. Bye.\n");
 
-  close_framebuffer();
-
-  // Free globally allocated memory
-  if (touchscreen_path != NULL ) 
-    free(touchscreen_path);
-
-  if (framebuffer_path != NULL ) 
-    free(framebuffer_path);
   
   return 0;
 }
