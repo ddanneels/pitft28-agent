@@ -39,8 +39,9 @@ An experiment with Adafruit PiTFT 2,8" capacitive screen
 
 1.  ## Permissions
 
-    From the command line, run the `groups` command to ensure that you are member of both `video` and `input` groups. If not, run the following command : ````bash
-    sudo usermod <your-username> -a -G video,input
+    From the command line, run the `groups` command to ensure that you are member of both `video` and `input` groups. If not, run the following command : 
+    ````bash
+    sudo usermod $(whoami) -a -G video,input
     ````
 
 

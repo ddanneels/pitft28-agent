@@ -79,11 +79,16 @@
  *  DISPLAY DRIVERS
  *********************/
 
+#ifndef USE_SDL
+#  define USE_SDL             0
+#endif
+
+
 /*-------------------
  *  Monitor of PC
  *-------------------*/
 #ifndef USE_MONITOR
-#  define USE_MONITOR         1
+#  define USE_MONITOR         0
 #endif
 
 #if USE_MONITOR
@@ -247,7 +252,7 @@
  *  Linux frame buffer device (/dev/fbx)
  *-----------------------------------------*/
 #ifndef USE_FBDEV
-#  define USE_FBDEV           0
+#  define USE_FBDEV           1
 #endif
 
 #if USE_FBDEV
@@ -328,7 +333,7 @@
  * Mouse or touchpad on PC (using SDL)
  *-------------------------------------*/
 #ifndef USE_MOUSE
-#  define USE_MOUSE           1
+#  define USE_MOUSE           0
 #endif
 
 #if USE_MOUSE
@@ -339,7 +344,7 @@
  * Mousewheel as encoder on PC (using SDL)
  *------------------------------------------*/
 #ifndef USE_MOUSEWHEEL
-#  define USE_MOUSEWHEEL      1
+#  define USE_MOUSEWHEEL      0
 #endif
 
 #if USE_MOUSEWHEEL
@@ -361,7 +366,7 @@
  * Mouse or touchpad as evdev interface (for Linux based systems)
  *------------------------------------------------*/
 #ifndef USE_EVDEV
-#  define USE_EVDEV           0
+#  define USE_EVDEV           1
 #endif
 
 #ifndef USE_BSD_EVDEV
@@ -369,7 +374,7 @@
 #endif
 
 #if USE_EVDEV || USE_BSD_EVDEV
-#  define EVDEV_NAME   "/dev/input/event0"        /*You can use the "evtest" Linux tool to get the list of devices and test them*/
+#  define EVDEV_NAME   "/dev/input/touchscreen"        /*You can use the "evtest" Linux tool to get the list of devices and test them*/
 #  define EVDEV_SWAP_AXES         0               /*Swap the x and y axes of the touchscreen*/
 
 #  define EVDEV_CALIBRATE         0               /*Scale and offset the touchscreen coordinates by using maximum and minimum values for each axis*/
@@ -386,7 +391,7 @@
  *   Keyboard of a PC (using SDL)
  *------------------------------*/
 #ifndef USE_KEYBOARD
-#  define USE_KEYBOARD        1
+#  define USE_KEYBOARD        0
 #endif
 
 #if USE_KEYBOARD

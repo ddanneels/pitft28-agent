@@ -17,14 +17,13 @@
 #include <threads.h>
 #include <unistd.h>
 
-
 #include <uchar.h>
 #include <wchar.h>
 
 #include "lvgl/lvgl.h"
 
-#include "lv_drivers/display/monitor.h"
-#include "lv_drivers/indev/mouse.h"
+#include "lv_drivers/display/fbdev.h"
+#include "lv_drivers/indev/evdev.h"
 
 #include "pitft_agent.h"
 #include "interface.h"
@@ -32,12 +31,14 @@
 
 bool g_exit_requested = false;
 
+void sigterm_handler(int signal);
+
 void sigterm_handler(int signal)
 {
   g_exit_requested = true;
 }
 
-
+int tick_thread (void *args);
 
 int tick_thread (void *args)
 {
@@ -58,35 +59,32 @@ int main(int argc, char* argv[]) {
 
   // LittlevGL initialization
   lv_init();
-  /* Use the 'monitor' driver which creates window on PC's monitor to simulate a display*/
-  monitor_init();
+  fbdev_init();
 
   /*Create a display buffer*/
   lv_disp_drv_t        disp_drv;
-  static lv_disp_buf_t disp_buf1;
-  static lv_color_t buf1_1[LV_HOR_RES_MAX * 120];
-  lv_disp_buf_init(&disp_buf1, buf1_1, NULL, LV_HOR_RES_MAX * 120);
+  static lv_disp_draw_buf_t draw_buf;
+  static lv_color_t buf1[64000];                        /*Declare a buffer for 1/10 screen size*/
+  lv_disp_draw_buf_init(&draw_buf, buf1, NULL, 64000);  /*Initialize the display buffer.*/
 
   /*Create a display*/
   lv_disp_drv_init(&disp_drv); /*Basic initialization*/
-  disp_drv.buffer = &disp_buf1;
-  disp_drv.flush_cb = monitor_flush;
+  disp_drv.draw_buf = &draw_buf;
+  disp_drv.flush_cb = fbdev_flush;
   lv_disp_drv_register(&disp_drv);
 
-  /* Add the mouse as input device
-   * Use the 'mouse' driver which reads the PC's mouse*/
-  mouse_init();
+  evdev_init();
   lv_indev_drv_t indev_drv;
   lv_indev_drv_init(&indev_drv); /*Basic initialization*/
   indev_drv.type = LV_INDEV_TYPE_POINTER;
 
   /*This function will be called periodically (by the library) to get the mouse position and state*/
-  indev_drv.read_cb = mouse_read;
+  indev_drv.read_cb = evdev_read;
   lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv);
 
   /*Set a cursor for the mouse*/
   LV_IMG_DECLARE(mouse_cursor_icon); /*Declare the image file.*/
-  lv_obj_t * cursor_obj = lv_img_create(lv_scr_act(), NULL); /*Create an image object for the cursor */
+  lv_obj_t * cursor_obj = lv_img_create(lv_scr_act()); /*Create an image object for the cursor */
   lv_img_set_src(cursor_obj, &mouse_cursor_icon);           /*Set the image source*/
   lv_indev_set_cursor(mouse_indev, cursor_obj);             /*Connect the image  object to the driver*/
 
@@ -105,7 +103,7 @@ int main(int argc, char* argv[]) {
   //thrd_join( thr_touchscreen, NULL );
   thrd_join( thr_tick, NULL);
 
-  printf("Thank you. Bye.\n");
+  printf("\nThank you. Bye.\n");
 
   
   return 0;
