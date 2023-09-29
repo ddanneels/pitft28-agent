@@ -1,9 +1,28 @@
 # pitft28-agent
 An experiment with Adafruit PiTFT 2,8" capacitive screen
 
-1.  ## Register the PiTFT in your Linux system
+1.  ## Useful packages
 
-    You just need to download and run the [adafruit-pitft.sh][1] script. Answer "no" to the last questions (no X display, no console) to get a raw framebuffer.
+    ````bash
+    sudo apt install libevdev-tools fbi fbset evtest libts-bin
+    ````
+
+1.  ## Register the device in your Linux system
+
+    In the `/boot/config.txt` file, you must add the following lines
+    ````
+    dtoverlay=pitft28-capacitive,rotation=90,speed=32000000,fps=25
+    dtoverlay=pitft28-capacitive,touch-swapxy=true,touch-invx=true
+    ````
+    
+    And ensure that the following lines are uncommented (not starting with #) :
+    ````
+    dtparam=i2c_arm=on
+    dtparam=i2s=on
+    dtparam=spi=on
+    ````
+
+    In the `/boot/cmdline.txt` file, you must add `fbconf=map:1` to prevent Linux console to show up on PiTFT screen.
 
 1.  ## Register the buttons as a input device
 
@@ -44,5 +63,14 @@ An experiment with Adafruit PiTFT 2,8" capacitive screen
     sudo usermod $(whoami) -a -G video,input
     ````
 
+1.  ## Compilation prerequesites
 
-[1]: https://github.com/adafruit/Raspberry-Pi-Installer-Scripts/blob/master/adafruit-pitft.sh
+    ````bash
+    sudo apt install build-essential gcc git libts-dev libevdev-dev 
+    ````
+
+1.  ## Launch the agent
+
+    The agent will expect two environment variables to be set : 
+    * `PITFT_DISPLAY` to something like "/dev/fb0"
+    * `PITFT_TOUCHPANEL` to something like "/dev/input/event2"

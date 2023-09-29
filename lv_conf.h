@@ -15,7 +15,7 @@
 
 #include <stdint.h>
 
-
+// Prevent warnings and don't build LVGL test suite
 #define LV_BUILD_TEST 0
 
 /*====================
